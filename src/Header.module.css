@@ -1,0 +1,12 @@
+.movableHeader {
+   font-family: Roboto, sans-serif;
+  color: #212121;               
+  font-size: 17px;                  
+  text-align: center;
+  width: 133px;       
+  height: 25px;      
+  position: absolute;
+  top: 32px;
+  left: 29px;
+  user-select: none;
+}

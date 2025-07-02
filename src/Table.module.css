@@ -1,0 +1,88 @@
+/* Table.module.css */
+
+/* //padding: 1rem;
+
+//   table {
+//     border-spacing: 0;
+//     border: 1px solid black;
+
+//     tr {
+//       :last-child {
+//         td {
+//           border-bottom: 0;
+//         }
+//       }
+//     }
+
+//     th,
+//     td {
+//       margin: 0;
+//       padding: 0.5rem;
+//       border-bottom: 1px solid black;
+//       border-right: 1px solid black;
+
+//       :last-child {
+//         border-right: 0;
+//       }
+//     } */
+
+
+.tableWrap {
+    overflow-x: scroll;
+    margin: 100px 0 0 29px;
+    max-width: 94%; 
+    overflow-y: hidden;
+}
+
+.tableWrap::-webkit-scrollbar {
+  height: 12px; 
+  border-radius: 12px; 
+  background: transparent;
+}
+
+.tableWrap::-webkit-scrollbar-thumb {
+  background: #5268894D; 
+  border-radius: 12px; 
+  border: 2px solid transparent; 
+  background-clip: content-box; 
+  transition: background-color 0.3s;
+}
+
+
+
+
+.table {
+  border-collapse: collapse; 
+  /* margin: 100px 0 0 29px; */
+  border-spacing: 0;
+  border: 1px solid #959CA9;
+  font-family: Roboto, sans-serif;
+  table-layout: auto;
+  min-width: 1750px; ;
+}
+
+.table th,
+.table td {
+  margin: 0;
+  padding: 1rem;
+  border-bottom: 1px solid #959CA9;
+  border-right: 1px solid #959CA9;
+  font-size: 15px;
+  text-align: center;
+  color: #000000;
+}
+
+.table th {
+  font-weight: bold;
+  user-select: none;
+}
+
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  width: 176px;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  width: 90px;
+}

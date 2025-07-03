@@ -38,8 +38,8 @@
 } */
  .icon-button {
   all: unset;
-  display: inline-block; /* Чтобы работали абсолютные позиции */
-  position: relative; /* Если нужно для позиционирования */
+  display: inline-block; 
+  position: relative; 
 }
  .clickable-icon_adding {
   position: absolute;

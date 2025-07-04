@@ -5,9 +5,10 @@ import React, { useState, useEffect} from 'react';
 import { useTable } from 'react-table'
 import style_table from './Table.module.css'
 import * as api from './api/jsonApi';
+import { AddClick, DeleteClick } from './button_functions';
 
 
-function Table({ columns, data }) {
+function Table({ columns, data, selectedRowIndex, setSelectedRowIndex  }) {
   // Use the state and functions returned from useTable to build your UI
   const {
     getTableProps,
@@ -33,12 +34,30 @@ function Table({ columns, data }) {
           ))}
         </thead>
         <tbody {...getTableBodyProps()}>
-          {rows.map(row => {
-            prepareRow(row)
+          {rows.map((row, i) => {
+            prepareRow(row);
+            const isSelected = i === selectedRowIndex;
             return (
-              <tr {...row.getRowProps()}>
+              <tr
+                {...row.getRowProps()}
+                style={{
+                  backgroundColor: isSelected ? '#d0eaff' : 'white',
+                  cursor: 'pointer',
+                }}
+              >
                 {row.cells.map(cell => (
-                  <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                  <td
+                    {...cell.getCellProps()}
+                    onClick={() => {
+                      if (cell.column.id === 'name' && selectedRowIndex !== i) {
+                        setSelectedRowIndex(row.index);
+                      } else {
+                        setSelectedRowIndex(null);
+                      }
+                    }}
+                  >
+                    {cell.render('Cell')}
+                  </td>
                 ))}
               </tr>
             )
@@ -67,9 +86,9 @@ const yearColumns = Array.from({ length: 12 }, (_, i) => {
     accessor: String(year),
   }
 })
-function App() {
-    const [data, setData] = useState([]); // Инициализация с пустым массивом
 
+function App() {
+    const [data, setData] = useState([]); 
     const columns = React.useMemo(
       () => [...baseColumns, ...yearColumns],
       []
@@ -83,7 +102,7 @@ function App() {
         const formattedData = fetchedData.map(item => ({
           name: item.name,
           unit_name: item.unit_name,
-          ...item.meanings // распаковываем года в верхний уровень
+          ...item.meanings 
         }));
         setData(formattedData);
       } else {
@@ -92,14 +111,14 @@ function App() {
     }
     loadData();
     }, []);
-
+    const [selectedRowIndex, setSelectedRowIndex] = useState(null);
     return (
       <div>
       <h1 className={styles.movableHeader}>Месторождение</h1>
       <button 
         className="icon-button"
         aria-label="Добавить"
-        //onClick={handleAddClick}
+        onClick={() => AddClick(data, setData)}
         style={{ all: 'unset' }} 
       >
         <img 
@@ -112,7 +131,8 @@ function App() {
       <button 
         className="icon-button"
         aria-label="Удалить"
-        //onClick={handleDeleteClick}
+        onClick={() => DeleteClick(data, setData, selectedRowIndex, setSelectedRowIndex)}
+        
         style={{ all: 'unset' }}
       >
         <img 
@@ -122,7 +142,9 @@ function App() {
         />
       </button>
       <div className={style_table.wrapper}>
-      <Table columns={columns} data={data} />
+      <Table columns={columns} data={data}
+      selectedRowIndex={selectedRowIndex}
+      setSelectedRowIndex={setSelectedRowIndex}/>
       </div>
       </div>
    )

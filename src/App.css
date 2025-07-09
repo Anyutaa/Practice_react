@@ -23,18 +23,22 @@
   cursor: pointer; 
 }
 
-.editable-input {
-  width: 100%;
-  border: 1px solid #0A8FDC;
-  border-radius: 1px;
-  padding: 2px;
-  font-size: inherit;
-  line-height: normal;
-  vertical-align: middle;
-  outline: none; 
+.save-button {
+  background-color: #fff;
+  border: 1px solid #0079C2;
+  color: #0079C2;
+  border-radius: 3px;
+  font-size: 14px;
+  padding: 9px 33px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  top: 380px;
+  left: 1650px;
 }
 
-.editable-input:focus {
-  border: 1px solid #0A8FDC; 
-}
+
 

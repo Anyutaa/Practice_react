@@ -1,0 +1,14 @@
+.editableInput {
+  width: 100%;
+  border: 1px solid #0A8FDC;
+  border-radius: 1px;
+  padding: 2px;
+  font-size: inherit;
+  line-height: normal;
+  vertical-align: middle;
+  outline: none; 
+}
+
+.editableInput:focus {
+  border: 1px solid #0A8FDC; 
+}

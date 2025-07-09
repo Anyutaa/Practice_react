@@ -4,8 +4,11 @@ import styles from './Header.module.css';
 import React, { useState, useEffect} from 'react';
 import { useTable } from 'react-table'
 import style_table from './Table.module.css'
+import style_input from './Input.module.css'
 import * as api from './api/jsonApi';
 import { AddClick, DeleteClick } from './button_functions';
+import { Button } from 'primereact/button';
+        
 
 
 function Table({ columns, data, setData, selectedRowIndex, setSelectedRowIndex  }) {
@@ -23,7 +26,14 @@ function Table({ columns, data, setData, selectedRowIndex, setSelectedRowIndex  
 
   const handleChange = (e, rowIndex, columnId) => {
     const newData = [...data];
-    newData[rowIndex][columnId] = e.target.value;
+    const inputValue = e.target.value;
+
+    // Попробуем преобразовать в число, если возможно
+    const parsedValue = inputValue !== '' && !isNaN(inputValue)
+      ? Number(inputValue)
+      : inputValue;
+
+    newData[rowIndex][columnId] = parsedValue;
     setData(newData);
   };
 
@@ -73,7 +83,7 @@ function Table({ columns, data, setData, selectedRowIndex, setSelectedRowIndex  
                     >
                       {isEditing ? (
                         <input
-                          className="editable-input"
+                          className={style_input.editableInput}
                           value={data[i][cell.column.id]}
                           onChange={(e) => handleChange(e, i, cell.column.id)}
                           onBlur={handleBlur}
@@ -172,6 +182,8 @@ function App() {
       selectedRowIndex={selectedRowIndex}
       setSelectedRowIndex={setSelectedRowIndex}/>
       </div>
+      <Button label="Сохранить" className="save-button" 
+      onClick = {() => api.saveData(data)}/>
       </div>
    )
 }

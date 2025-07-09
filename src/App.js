@@ -8,8 +8,7 @@ import * as api from './api/jsonApi';
 import { AddClick, DeleteClick } from './button_functions';
 
 
-function Table({ columns, data, selectedRowIndex, setSelectedRowIndex  }) {
-  // Use the state and functions returned from useTable to build your UI
+function Table({ columns, data, setData, selectedRowIndex, setSelectedRowIndex  }) {
   const {
     getTableProps,
     getTableBodyProps,
@@ -20,10 +19,22 @@ function Table({ columns, data, selectedRowIndex, setSelectedRowIndex  }) {
     columns,
     data,
   })
-  // Render the UI for your table
+  const [editingCell, setEditingCell] = useState({ rowIndex: null, columnId: null });
+
+  const handleChange = (e, rowIndex, columnId) => {
+    const newData = [...data];
+    newData[rowIndex][columnId] = e.target.value;
+    setData(newData);
+  };
+
+  const handleBlur = () => {
+    setEditingCell({ rowIndex: null, columnId: null });
+  };
+
   return (
     <div className={style_table.tableWrap}>
-      <table {...getTableProps()} className={style_table.table}>
+      <table {...getTableProps()} className={style_table.table}
+      style={{ tableLayout: 'fixed', width: '100%' }}>
         <thead>
           {headerGroups.map(headerGroup => (
             <tr {...headerGroup.getHeaderGroupProps()}>
@@ -45,22 +56,37 @@ function Table({ columns, data, selectedRowIndex, setSelectedRowIndex  }) {
                   cursor: 'pointer',
                 }}
               >
-                {row.cells.map(cell => (
-                  <td
-                    {...cell.getCellProps()}
-                    onClick={() => {
-                      if (cell.column.id === 'name' && selectedRowIndex !== i) {
-                        setSelectedRowIndex(row.index);
-                      } else {
-                        setSelectedRowIndex(null);
-                      }
-                    }}
-                  >
-                    {cell.render('Cell')}
-                  </td>
-                ))}
+                {row.cells.map(cell => {
+                  const isEditing = editingCell.rowIndex === i && editingCell.columnId === cell.column.id;
+
+                  return (
+                    <td
+                      {...cell.getCellProps()}
+                      onClick={() => {
+                        if (cell.column.id === 'name' && selectedRowIndex !== i) {
+                          setSelectedRowIndex(row.index);
+                        } else {
+                          setSelectedRowIndex(null);
+                        }
+                        setEditingCell({ rowIndex: i, columnId: cell.column.id });
+                      }}
+                    >
+                      {isEditing ? (
+                        <input
+                          className="editable-input"
+                          value={data[i][cell.column.id]}
+                          onChange={(e) => handleChange(e, i, cell.column.id)}
+                          onBlur={handleBlur}
+                          autoFocus
+                        />
+                      ) : (
+                        cell.render('Cell')
+                      )}
+                    </td>
+                 );
+               })}
               </tr>
-            )
+            );
           })}
         </tbody>
       </table>
@@ -142,7 +168,7 @@ function App() {
         />
       </button>
       <div className={style_table.wrapper}>
-      <Table columns={columns} data={data}
+      <Table columns={columns} data={data} setData={setData}
       selectedRowIndex={selectedRowIndex}
       setSelectedRowIndex={setSelectedRowIndex}/>
       </div>

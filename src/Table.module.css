@@ -1,13 +1,15 @@
 /* Table.module.css */
 
 .tableWrap {
+    max-height: 425px; 
     overflow-x: scroll;
     margin: 100px 0 0 29px;
     max-width: 94%; 
-    overflow-y: hidden;
+    overflow-y: auto;
 }
 
 .tableWrap::-webkit-scrollbar {
+  width: 12px; 
   height: 12px; 
   border-radius: 12px; 
   background: transparent;

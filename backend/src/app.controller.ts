@@ -12,8 +12,18 @@ export class AppController {
   getData() {
     return this.appService.getData(); 
   }
-  @Post()
-  postData(@Body() newItem: any) {
-    return this.appService.postData(newItem);
+ @Post('add')
+  addData(@Body() newItems: any[]) {
+    return this.appService.addData(newItems);
+  }
+
+  @Patch('update')
+  updateData(@Body() editedItems: { id: number, changes: any }[]) {
+    return this.appService.updateData(editedItems);
+  }
+
+  @Delete('delete')
+  deleteData(@Body() idsToDelete: number[]) {
+    return this.appService.deleteData(idsToDelete);
   }
 }

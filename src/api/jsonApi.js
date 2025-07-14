@@ -11,13 +11,67 @@ export async function fetchData() {
     return []; 
   }
 }
-
-// 2. POST - добавить новые данные
-export async function saveData(newItem) {
+//
+export async function saveData(addedRows, editedRows, deletedIds, setAddedRows, setEditedRows, setDeletedIds,columns) {
+  await saveAddedRows(addedRows);      
+  await saveEditedRows(editedRows, columns);   
+  await deleteRows(deletedIds); 
+  setAddedRows([]);
+  setEditedRows([]);
+  setDeletedIds([]);
+}
+//
+export async function saveAddedRows(addedRows) {
   try {
-    const response = await axios.post(API_URL, newItem);
+    const response = await axios.post(`${API_URL}/add`, addedRows); // массив новых строк
     return response.data;
   } catch (error) {
     console.error('Ошибка при добавлении данных:', error);
+  }
+}
+//
+export async function saveEditedRows(editedRows, columns) {
+  try {
+    const payload = editedRows.map(row => {
+      const changes = {};
+      const meanings = {};
+
+      for (const key in row.changes) {
+        const column = columns.find(col => col.id === key);
+        if (column?.isYear) {
+          meanings[key] = row.changes[key];
+        } else {
+          changes[key] = row.changes[key];
+        }
+      }
+
+      if (Object.keys(meanings).length > 0) {
+        changes.meanings = meanings;
+      }
+
+      return {
+        id: row.id,
+        changes
+      };
+    });
+
+    const response = await axios.patch(`${API_URL}/update`, payload);
+    console.log('Payload for PATCH:', payload);
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при обновлении данных:', error);
+  }
+}
+
+
+
+export async function deleteRows(deletedIds) {
+  try {
+    const response = await axios.delete(`${API_URL}/delete`, {
+      data: deletedIds 
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при удалении данных:', error);
   }
 }

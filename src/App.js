@@ -1,44 +1,49 @@
 import './App.css';
 import styles from './Header.module.css';
 
-import React, { useState, useEffect} from 'react';
-import { useTable } from 'react-table'
-import style_table from './Table.module.css'
-import style_input from './Input.module.css'
+import React, { useState, useEffect } from 'react';
+import { useTable } from 'react-table';
+import style_table from './Table.module.css';
+import style_input from './Input.module.css';
 import * as api from './api/jsonApi';
 import { AddClick, DeleteClick } from './button_functions';
 import { Button } from 'primereact/button';
-        
-function Table({ columns, data, setData, selectedRowIndex, setSelectedRowIndex, editedRows, setEditedRows}) {
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = useTable({
-    columns,
-    data,
-  })
-  const [editingCell, setEditingCell] = useState({ rowIndex: null, columnId: null });
+
+function Table({
+  columns,
+  data,
+  setData,
+  selectedRowIndex,
+  setSelectedRowIndex,
+  editedRows,
+  setEditedRows,
+}) {
+  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
+    useTable({
+      columns,
+      data,
+    });
+  const [editingCell, setEditingCell] = useState({
+    rowIndex: null,
+    columnId: null,
+  });
 
   const handleChange = (e, rowIndex, columnId) => {
     const newData = [...data];
     const inputValue = e.target.value;
     // Преобразуем inputValue в число, если оно не пустое и является числовым значением; иначе оставляем как есть
-    const parsedValue = inputValue !== '' && !isNaN(inputValue)
-      ? Number(inputValue)
-      : inputValue;
+    const parsedValue =
+      inputValue !== '' && !isNaN(inputValue) ? Number(inputValue) : inputValue;
 
     const updatedRow = { ...newData[rowIndex] };
     // Проверяем является ли колонка годом
-    const column = columns.find(col => col.id === columnId);
+    const column = columns.find((col) => col.id === columnId);
     const isYearColumn = column?.isYear === true;
 
     if (isYearColumn) {
       updatedRow.meanings = {
         ...updatedRow.meanings,
-        [columnId]: parsedValue
+        [columnId]: parsedValue,
       };
     } else {
       updatedRow[columnId] = parsedValue;
@@ -56,14 +61,14 @@ function Table({ columns, data, setData, selectedRowIndex, setSelectedRowIndex, 
 
     const changeEntry = {
       id: updatedRow.id,
-      changes
+      changes,
     };
 
     // проверяем редактировалась ли строчка уже и если да, то дописываем новые изменения
-    const isAlreadyEdited = editedRows.find(r => r.id === updatedRow.id);
+    const isAlreadyEdited = editedRows.find((r) => r.id === updatedRow.id);
     if (isAlreadyEdited) {
-      setEditedRows(prev =>
-        prev.map(r => {
+      setEditedRows((prev) =>
+        prev.map((r) => {
           if (r.id !== updatedRow.id) return r;
           const prevChanges = r.changes;
 
@@ -75,8 +80,8 @@ function Table({ columns, data, setData, selectedRowIndex, setSelectedRowIndex, 
                 meanings: {
                   ...(prevChanges.meanings || {}),
                   [columnId]: parsedValue,
-                }
-              }
+                },
+              },
             };
           } else {
             return {
@@ -84,13 +89,13 @@ function Table({ columns, data, setData, selectedRowIndex, setSelectedRowIndex, 
               changes: {
                 ...prevChanges,
                 [columnId]: parsedValue,
-              }
+              },
             };
           }
         })
       );
     } else {
-      setEditedRows(prev => [...prev, changeEntry]);
+      setEditedRows((prev) => [...prev, changeEntry]);
     }
   };
 
@@ -100,12 +105,15 @@ function Table({ columns, data, setData, selectedRowIndex, setSelectedRowIndex, 
 
   return (
     <div className={style_table.tableWrap}>
-      <table {...getTableProps()} className={style_table.table}
-      style={{ tableLayout: 'fixed', width: '100%' }}>
+      <table
+        {...getTableProps()}
+        className={style_table.table}
+        style={{ tableLayout: 'fixed', width: '100%' }}
+      >
         <thead>
-          {headerGroups.map(headerGroup => (
+          {headerGroups.map((headerGroup) => (
             <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map(column => (
+              {headerGroup.headers.map((column) => (
                 <th {...column.getHeaderProps()}>{column.render('Header')}</th>
               ))}
             </tr>
@@ -123,93 +131,98 @@ function Table({ columns, data, setData, selectedRowIndex, setSelectedRowIndex, 
                   cursor: 'pointer',
                 }}
               >
-                {row.cells.map(cell => {
-                  const isEditing = editingCell.rowIndex === i && editingCell.columnId === cell.column.id;
+                {row.cells.map((cell) => {
+                  const isEditing =
+                    editingCell.rowIndex === i &&
+                    editingCell.columnId === cell.column.id;
 
                   return (
                     <td
                       {...cell.getCellProps()}
                       onClick={() => {
-                        if (cell.column.id === 'name' && selectedRowIndex !== i) {
+                        if (
+                          cell.column.id === 'name' &&
+                          selectedRowIndex !== i
+                        ) {
                           setSelectedRowIndex(row.index);
                         } else {
                           setSelectedRowIndex(null);
                         }
-                        setEditingCell({ rowIndex: i, columnId: cell.column.id });
+                        setEditingCell({
+                          rowIndex: i,
+                          columnId: cell.column.id,
+                        });
                       }}
                     >
-                      {isEditing ? (
-                        (() => {
-                          let value = '';
-                          if (cell.column.isYear) {
-                            value = data[i]?.meanings?.[cell.column.id] ?? '';
-                          } else {
-                            value = data[i]?.[cell.column.id] ?? '';
-                          }
+                      {isEditing
+                        ? (() => {
+                            let value = '';
+                            if (cell.column.isYear) {
+                              value = data[i]?.meanings?.[cell.column.id] ?? '';
+                            } else {
+                              value = data[i]?.[cell.column.id] ?? '';
+                            }
 
-                          return (
-                            <input
-                              className={style_input.editableInput}
-                              value={value}
-                              onChange={(e) => handleChange(e, i, cell.column.id)}
-                              onBlur={handleBlur}
-                              autoFocus
-                            />
-                          );
-                        })()
-                      ) : (
-                        cell.render('Cell')
-                      )}
+                            return (
+                              <input
+                                className={style_input.editableInput}
+                                value={value}
+                                onChange={(e) =>
+                                  handleChange(e, i, cell.column.id)
+                                }
+                                onBlur={handleBlur}
+                                autoFocus
+                              />
+                            );
+                          })()
+                        : cell.render('Cell')}
                     </td>
-                 );
-               })}
+                  );
+                })}
               </tr>
             );
           })}
         </tbody>
       </table>
     </div>
-  )
+  );
 }
 
 const baseColumns = [
-      {
-        Header: 'Показатель',
-        accessor: 'name',
-      },
-      {
-        Header: 'ед.изм.',
-        accessor: 'unit_name',
-      },
-    ]
+  {
+    Header: 'Показатель',
+    accessor: 'name',
+  },
+  {
+    Header: 'ед.изм.',
+    accessor: 'unit_name',
+  },
+];
 
 const yearColumns = Array.from({ length: 12 }, (_, i) => {
   const year = String(2026 + i);
   return {
     Header: year,
-    accessor: (row) => row.meanings?.[year] ?? '', 
-    id: year, 
-    isYear: true
+    accessor: (row) => row.meanings?.[year] ?? '',
+    id: year,
+    isYear: true,
   };
 });
 
 function App() {
-    const [data, setData] = useState([]); 
-    const columns = React.useMemo(
-      () => [...baseColumns, ...yearColumns],
-      []
-    );
+  const [data, setData] = useState([]);
+  const columns = React.useMemo(() => [...baseColumns, ...yearColumns], []);
 
-    useEffect(() => {
+  useEffect(() => {
     async function loadData() {
       const fetchedData = await api.fetchData();
       console.log('Полученные данные с API:', fetchedData);
       if (Array.isArray(fetchedData)) {
-        const formattedData = fetchedData.map(item => ({
+        const formattedData = fetchedData.map((item) => ({
           id: item.id,
           name: item.name,
           unit_name: item.unit_name,
-          meanings: item.meanings || {}  
+          meanings: item.meanings || {},
         }));
         setData(formattedData);
       } else {
@@ -217,52 +230,77 @@ function App() {
       }
     }
     loadData();
-    }, []);
-    const [selectedRowIndex, setSelectedRowIndex] = useState(null);
-    const [addedRows, setAddedRows] = useState([]);
-    const [editedRows, setEditedRows] = useState([]);
-    const [deletedIds, setDeletedIds] = useState([]);
-    return (
-      <div>
+  }, []);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+  const [addedRows, setAddedRows] = useState([]);
+  const [editedRows, setEditedRows] = useState([]);
+  const [deletedIds, setDeletedIds] = useState([]);
+  return (
+    <div>
       <h1 className={styles.movableHeader}>Месторождение</h1>
-      <button 
+      <button
         className="icon-button"
         aria-label="Добавить"
-        onClick={() => AddClick(data,setData, addedRows, setAddedRows)}
-        style={{ all: 'unset' }} 
+        onClick={() => AddClick(data, setData, addedRows, setAddedRows)}
+        style={{ all: 'unset' }}
       >
-        <img 
-          src="Icon/Icon_adding.png" 
+        <img
+          src="Icon/Icon_adding.png"
           alt=""
           className="clickable-icon_adding"
         />
       </button>
 
-      <button 
+      <button
         className="icon-button"
         aria-label="Удалить"
-        onClick={() => DeleteClick(data, setData, selectedRowIndex, setSelectedRowIndex, deletedIds, setDeletedIds)}
-        
+        onClick={() =>
+          DeleteClick(
+            data,
+            setData,
+            selectedRowIndex,
+            setSelectedRowIndex,
+            deletedIds,
+            setDeletedIds
+          )
+        }
         style={{ all: 'unset' }}
       >
-        <img 
-          src="Icon/Icon_deletion.png" 
+        <img
+          src="Icon/Icon_deletion.png"
           alt=""
-          className="clickable-icon_deletion" 
+          className="clickable-icon_deletion"
         />
       </button>
       <div className={style_table.wrapper}>
-      <Table columns={columns} data={data} setData={setData}
-      selectedRowIndex={selectedRowIndex}
-      setSelectedRowIndex={setSelectedRowIndex} editedRows={editedRows} 
-      setEditedRows={setEditedRows}/>
+        <Table
+          columns={columns}
+          data={data}
+          setData={setData}
+          selectedRowIndex={selectedRowIndex}
+          setSelectedRowIndex={setSelectedRowIndex}
+          editedRows={editedRows}
+          setEditedRows={setEditedRows}
+        />
       </div>
-      <Button label="Сохранить" className="save-button" 
-      onClick = {() => api.saveData(addedRows, editedRows, deletedIds, setAddedRows, setEditedRows, setDeletedIds, columns)}/>
-      </div>
-   )
+      <Button
+        label="Сохранить"
+        className="save-button"
+        onClick={() =>
+          api.saveData(
+            addedRows,
+            editedRows,
+            deletedIds,
+            setAddedRows,
+            setEditedRows,
+            setDeletedIds,
+            columns,
+            setData 
+          )
+        }
+      />
+    </div>
+  );
 }
 
 export default App;
-
-

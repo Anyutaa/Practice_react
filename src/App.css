@@ -1,32 +1,31 @@
-
- .icon-button {
+.icon-button {
   all: unset;
-  display: inline-block; 
-  position: relative; 
+  display: inline-block;
+  position: relative;
 }
- .clickable-icon_adding {
+.clickable-icon_adding {
   user-select: none;
   position: absolute;
   top: 76px;
   left: 29px;
-  width: 24px; 
+  width: 24px;
   height: 24px;
-  cursor: pointer; 
+  cursor: pointer;
 }
- .clickable-icon_deletion {
+.clickable-icon_deletion {
   user-select: none;
   position: absolute;
   top: 78px;
   left: 58px;
-  width: 20.5px; 
+  width: 20.5px;
   height: 18.54px;
-  cursor: pointer; 
+  cursor: pointer;
 }
 
 .save-button {
   background-color: #fff;
-  border: 1px solid #0079C2;
-  color: #0079C2;
+  border: 1px solid #0079c2;
+  color: #0079c2;
   border-radius: 3px;
   font-size: 14px;
   padding: 9px 33px;
@@ -39,6 +38,3 @@
   top: 380px;
   left: 1650px;
 }
-
-
-

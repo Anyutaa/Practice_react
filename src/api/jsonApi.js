@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API_URL = 'http://localhost:3001/data'; 
+const API_URL = 'http://localhost:3001/data';
 
 // 1. GET - получить список или объект
 export async function fetchData() {
@@ -8,22 +8,41 @@ export async function fetchData() {
     return response.data;
   } catch (error) {
     console.error('Ошибка при получении данных:', error);
-    return []; 
+    return [];
   }
 }
 //
-export async function saveData(addedRows, editedRows, deletedIds, setAddedRows, setEditedRows, setDeletedIds,columns) {
-  await saveAddedRows(addedRows);      
-  await saveEditedRows(editedRows, columns);   
-  await deleteRows(deletedIds); 
+export async function saveData(
+  addedRows,
+  editedRows,
+  deletedIds,
+  setAddedRows,
+  setEditedRows,
+  setDeletedIds,
+  columns,
+  setData
+) {
+  await saveAddedRows(addedRows, setData);
+  await saveEditedRows(editedRows, columns);
+  await deleteRows(deletedIds);
   setAddedRows([]);
   setEditedRows([]);
   setDeletedIds([]);
 }
 //
-export async function saveAddedRows(addedRows) {
+export async function saveAddedRows(addedRows, setData) {
   try {
     const response = await axios.post(`${API_URL}/add`, addedRows); // массив новых строк
+    const idMap = response.data.idMap;
+
+    // Обновляем реальные id в таблице, заменяя временные на реальные
+    setData((prevData) =>
+      prevData.map((row) =>
+        row.tempId && idMap[row.tempId]
+          ? { ...row, id: idMap[row.tempId] }
+          : row
+      )
+    );
     return response.data;
   } catch (error) {
     console.error('Ошибка при добавлении данных:', error);
@@ -32,12 +51,12 @@ export async function saveAddedRows(addedRows) {
 //
 export async function saveEditedRows(editedRows, columns) {
   try {
-    const payload = editedRows.map(row => {
+    const payload = editedRows.map((row) => {
       const changes = {};
       const meanings = {};
 
       for (const key in row.changes) {
-        const column = columns.find(col => col.id === key);
+        const column = columns.find((col) => col.id === key);
         if (column?.isYear) {
           meanings[key] = row.changes[key];
         } else {
@@ -51,7 +70,7 @@ export async function saveEditedRows(editedRows, columns) {
 
       return {
         id: row.id,
-        changes
+        changes,
       };
     });
 
@@ -63,12 +82,10 @@ export async function saveEditedRows(editedRows, columns) {
   }
 }
 
-
-
 export async function deleteRows(deletedIds) {
   try {
     const response = await axios.delete(`${API_URL}/delete`, {
-      data: deletedIds 
+      data: deletedIds,
     });
     return response.data;
   } catch (error) {

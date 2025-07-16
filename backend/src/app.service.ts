@@ -1,49 +1,78 @@
 import { Injectable } from '@nestjs/common';
-import * as fs from 'fs';
+import { promises as fs } from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class AppService {
   private dataFilePath = path.join(__dirname, '..', 'data.json');
+  private maxId = 0;
+
   // Чтение данных из файла
-  private loadFromFile(): any[] {
+  private async loadFromFile(): Promise<any[]> {
     try {
-      if (!fs.existsSync(this.dataFilePath)) return [];
-      const content = fs.readFileSync(this.dataFilePath, 'utf-8');
-      return JSON.parse(content);
+      await fs.access(this.dataFilePath); // проверка существования
+      const content = await fs.readFile(this.dataFilePath, 'utf-8');
+      const data = JSON.parse(content);
+      let maxId = 0;
+      for (const item of data) {
+        if (typeof item.id === 'number' && item.id > maxId) {
+          maxId = item.id;
+        }
+      }
+      this.maxId = maxId;
+      return data;
     } catch (error) {
       console.error('Ошибка при чтении файла:', error);
       return [];
     }
   }
+
   // Запись данных в файл
-  private saveToFile(data: any[]) {
+  private async saveToFile(data: any[]): Promise<void> {
     try {
-      fs.writeFileSync(this.dataFilePath, JSON.stringify(data, null, 2), 'utf-8');
+      await fs.writeFile(
+        this.dataFilePath,
+        JSON.stringify(data, null, 2),
+        'utf-8',
+      );
     } catch (error) {
       console.error('Ошибка при записи файла:', error);
     }
   }
-  getData() {
-    const data = this.loadFromFile();
+
+  async getData() {
+    const data = await this.loadFromFile();
     console.log('Данные считаны:', data.length);
     return data;
   }
-  addData(newItems: any[]) {
-    const data = this.loadFromFile();
 
-    newItems.forEach(item => {
-      data.push(item);
+  // Добавление новых строк
+  async addData(newItems: any[]) {
+    const data = await this.loadFromFile();
+    const idMap = {};
+
+    const newItemsWithId = newItems.map(item => {
+      this.maxId += 1;
+      idMap[item.tempId] = this.maxId;
+
+      return {
+        id: this.maxId, // ставим в начало
+        ...Object.fromEntries(
+          Object.entries(item).filter(([key]) => key !== 'id')
+        ),
+      };
     });
-
-    this.saveToFile(data);
-    return { message: 'Добавлены новые строки', added: newItems };
+    const updatedData = [...data, ...newItemsWithId];
+    await this.saveToFile(updatedData); 
+    return { message: 'Добавлены новые строки', idMap,};
   }
-  updateData(editedItems: { id: number, changes: any }[]) {
-    const data = this.loadFromFile();
 
-    editedItems.forEach(({ id, changes }) => {
-      const item = data.find(el => el.id === id);
+  // Редактирование строк
+  async updateData(editedItems: { id: number; changes: any }[]) {
+    const data = await this.loadFromFile();
+
+    for (const { id, changes } of editedItems) {
+      const item = data.find((el) => el.id === id || el.tempId === id);
       if (item) {
         for (const key in changes) {
           if (key === 'meanings' && typeof changes.meanings === 'object') {
@@ -51,21 +80,25 @@ export class AppService {
           } else {
             item[key] = changes[key];
           }
-        } // обновляем только изменённые поля
+        }
       }
-    });
-    this.saveToFile(data);
+    }
+    await this.saveToFile(data);
     return { message: 'Обновлены строки', updated: editedItems };
   }
-
-  deleteData(idsToDelete: number[]) {
-    let data = this.loadFromFile();
+  
+  // Удаление строк
+  async deleteData(idsToDelete: number[]) {
+    let data = await this.loadFromFile();
 
     const beforeLength = data.length;
-    data = data.filter(item => !idsToDelete.includes(item.id));
+    data = data.filter(
+        (item) =>
+          !(idsToDelete.includes(item.id) || idsToDelete.includes(item.tempId))
+    );
     const deletedCount = beforeLength - data.length;
 
-    this.saveToFile(data);
+    await this.saveToFile(data);
     return { message: `Удалено строк: ${deletedCount}`, deleted: idsToDelete };
   }
 }

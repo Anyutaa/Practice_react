@@ -164,15 +164,30 @@ function Table({
                             }
 
                             return (
-                              <input
-                                className={style_input.editableInput}
-                                value={value}
-                                onChange={(e) =>
-                                  handleChange(e, i, cell.column.id)
-                                }
-                                onBlur={handleBlur}
-                                autoFocus
-                              />
+                              cell.column.selectOptions ? (
+                                <select
+                                  className={style_input.editableInput}
+                                  value={value}
+                                  onChange={(e) => handleChange(e, i, cell.column.id)}
+                                  onBlur={handleBlur}
+                                  autoFocus
+                                >
+                                  <option value="">Выберите</option>
+                                  {cell.column.selectOptions.map((option) => (
+                                    <option key={option} value={option}>
+                                      {option}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  className={style_input.editableInput}
+                                  value={value}
+                                  onChange={(e) => handleChange(e, i, cell.column.id)}
+                                  onBlur={handleBlur}
+                                  autoFocus
+                                />
+                              )
                             );
                           })()
                         : cell.render('Cell')}
@@ -196,6 +211,7 @@ const baseColumns = [
   {
     Header: 'ед.изм.',
     accessor: 'unit_name',
+    selectOptions: ['млн м3', 'тыс.т', 'млн м3/год', 'процент'],
   },
 ];
 

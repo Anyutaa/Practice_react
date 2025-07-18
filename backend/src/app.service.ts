@@ -51,20 +51,20 @@ export class AppService {
     const data = await this.loadFromFile();
     const idMap = {};
 
-    const newItemsWithId = newItems.map(item => {
+    const newItemsWithId = newItems.map((item) => {
       this.maxId += 1;
       idMap[item.tempId] = this.maxId;
 
       return {
         id: this.maxId, // ставим в начало
         ...Object.fromEntries(
-          Object.entries(item).filter(([key]) => key !== 'id')
+          Object.entries(item).filter(([key]) => key !== 'id'),
         ),
       };
     });
     const updatedData = [...data, ...newItemsWithId];
-    await this.saveToFile(updatedData); 
-    return { message: 'Добавлены новые строки', idMap,};
+    await this.saveToFile(updatedData);
+    return { message: 'Добавлены новые строки', idMap };
   }
 
   // Редактирование строк
@@ -86,15 +86,15 @@ export class AppService {
     await this.saveToFile(data);
     return { message: 'Обновлены строки', updated: editedItems };
   }
-  
+
   // Удаление строк
   async deleteData(idsToDelete: number[]) {
     let data = await this.loadFromFile();
 
     const beforeLength = data.length;
     data = data.filter(
-        (item) =>
-          !(idsToDelete.includes(item.id) || idsToDelete.includes(item.tempId))
+      (item) =>
+        !(idsToDelete.includes(item.id) || idsToDelete.includes(item.tempId)),
     );
     const deletedCount = beforeLength - data.length;
 

@@ -1,12 +1,10 @@
 import { nanoid } from 'nanoid';
 export function AddClick(data, setData, addedRows, setAddedRows) {
-  const years = Object.fromEntries(
-    Array.from({ length: 12 }, (_, i) => [String(2026 + i), ''])
-  );
+  const years = Object.fromEntries(Array.from({ length: 12 }, (_, i) => [String(2026 + i), '']));
   const tempId = nanoid();
   const newRow = {
-    id:'',
-    tempId,         
+    id: '',
+    tempId,
     name: '',
     unit_name: '',
     meanings: years,

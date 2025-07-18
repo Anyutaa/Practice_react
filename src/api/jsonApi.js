@@ -38,9 +38,7 @@ export async function saveAddedRows(addedRows, setData) {
     // Обновляем реальные id в таблице, заменяя временные на реальные
     setData((prevData) =>
       prevData.map((row) =>
-        row.tempId && idMap[row.tempId]
-          ? { ...row, id: idMap[row.tempId] }
-          : row
+        row.tempId && idMap[row.tempId] ? { ...row, id: idMap[row.tempId] } : row
       )
     );
     return response.data;

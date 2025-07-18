@@ -8,6 +8,7 @@ import style_input from './Input.module.css';
 import * as api from './api/jsonApi';
 import { AddClick, DeleteClick } from './button_functions';
 import { Button } from 'primereact/button';
+import { drawChart } from './chart_function';
 
 function Table({
   columns,
@@ -17,12 +18,12 @@ function Table({
   setSelectedRowIndex,
   editedRows,
   setEditedRows,
+  selectedIndex,
 }) {
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    useTable({
-      columns,
-      data,
-    });
+  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable({
+    columns,
+    data,
+  });
   const [editingCell, setEditingCell] = useState({
     rowIndex: null,
     columnId: null,
@@ -32,8 +33,7 @@ function Table({
     const newData = [...data];
     const inputValue = e.target.value;
     // Преобразуем inputValue в число, если оно не пустое и является числовым значением; иначе оставляем как есть
-    const parsedValue =
-      inputValue !== '' && !isNaN(inputValue) ? Number(inputValue) : inputValue;
+    const parsedValue = inputValue !== '' && !isNaN(inputValue) ? Number(inputValue) : inputValue;
 
     const updatedRow = { ...newData[rowIndex] };
     // Проверяем является ли колонка годом
@@ -99,8 +99,12 @@ function Table({
     }
   };
 
-  const handleBlur = () => {
+  const handleBlur = (rowIndex) => {
     setEditingCell({ rowIndex: null, columnId: null });
+
+    if (rowIndex === selectedIndex) {
+      drawChart(data, selectedIndex);
+    }
   };
 
   return (
@@ -133,17 +137,13 @@ function Table({
               >
                 {row.cells.map((cell) => {
                   const isEditing =
-                    editingCell.rowIndex === i &&
-                    editingCell.columnId === cell.column.id;
+                    editingCell.rowIndex === i && editingCell.columnId === cell.column.id;
 
                   return (
                     <td
                       {...cell.getCellProps()}
                       onClick={() => {
-                        if (
-                          cell.column.id === 'name' &&
-                          selectedRowIndex !== i
-                        ) {
+                        if (cell.column.id === 'name' && selectedRowIndex !== i) {
                           setSelectedRowIndex(row.index);
                         } else {
                           setSelectedRowIndex(null);
@@ -163,31 +163,29 @@ function Table({
                               value = data[i]?.[cell.column.id] ?? '';
                             }
 
-                            return (
-                              cell.column.selectOptions ? (
-                                <select
-                                  className={style_input.editableInput}
-                                  value={value}
-                                  onChange={(e) => handleChange(e, i, cell.column.id)}
-                                  onBlur={handleBlur}
-                                  autoFocus
-                                >
-                                  <option value="">Выберите</option>
-                                  {cell.column.selectOptions.map((option) => (
-                                    <option key={option} value={option}>
-                                      {option}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : (
-                                <input
-                                  className={style_input.editableInput}
-                                  value={value}
-                                  onChange={(e) => handleChange(e, i, cell.column.id)}
-                                  onBlur={handleBlur}
-                                  autoFocus
-                                />
-                              )
+                            return cell.column.selectOptions ? (
+                              <select
+                                className={style_input.editableInput}
+                                value={value}
+                                onChange={(e) => handleChange(e, i, cell.column.id)}
+                                onBlur={() => handleBlur(i)}
+                                autoFocus
+                              >
+                                <option value="">Выберите</option>
+                                {cell.column.selectOptions.map((option) => (
+                                  <option key={option} value={option}>
+                                    {option}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                className={style_input.editableInput}
+                                value={value}
+                                onChange={(e) => handleChange(e, i, cell.column.id)}
+                                onBlur={() => handleBlur(i)}
+                                autoFocus
+                              />
                             );
                           })()
                         : cell.render('Cell')}
@@ -251,6 +249,13 @@ function App() {
   const [addedRows, setAddedRows] = useState([]);
   const [editedRows, setEditedRows] = useState([]);
   const [deletedIds, setDeletedIds] = useState([]);
+
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const handleClick = (index) => {
+    setSelectedIndex(index);
+    drawChart(data, index);
+  };
+
   return (
     <div>
       <h1 className={styles.movableHeader}>Месторождение</h1>
@@ -260,11 +265,7 @@ function App() {
         onClick={() => AddClick(data, setData, addedRows, setAddedRows)}
         style={{ all: 'unset' }}
       >
-        <img
-          src="Icon/Icon_adding.png"
-          alt=""
-          className="clickable-icon_adding"
-        />
+        <img src="Icon/Icon_adding.png" alt="" className="clickable-icon_adding" />
       </button>
 
       <button
@@ -282,11 +283,7 @@ function App() {
         }
         style={{ all: 'unset' }}
       >
-        <img
-          src="Icon/Icon_deletion.png"
-          alt=""
-          className="clickable-icon_deletion"
-        />
+        <img src="Icon/Icon_deletion.png" alt="" className="clickable-icon_deletion" />
       </button>
       <div className={style_table.wrapper}>
         <Table
@@ -297,6 +294,7 @@ function App() {
           setSelectedRowIndex={setSelectedRowIndex}
           editedRows={editedRows}
           setEditedRows={setEditedRows}
+          selectedIndex={selectedIndex}
         />
       </div>
       <Button
@@ -311,9 +309,34 @@ function App() {
             setEditedRows,
             setDeletedIds,
             columns,
-            setData 
+            setData
           )
         }
+      />
+      <Button
+        label="Газ (вал.)"
+        className={`chart-button ${selectedIndex === 0 ? 'active' : ''}`}
+        onClick={() => handleClick(0)}
+      />
+      <Button
+        label="Конденсат (нестаб.)"
+        className={`chart-button ${selectedIndex === 2 ? 'active' : ''}`}
+        onClick={() => handleClick(2)}
+      />
+      <Button
+        label="Пик"
+        className={`chart-button ${selectedIndex === 5 ? 'active' : ''}`}
+        onClick={() => handleClick(5)}
+      />
+      <canvas
+        id="myChart"
+        width="1000"
+        height="300"
+        style={{
+          display: 'block',
+          margin: '40px auto',
+          maxWidth: '100%',
+        }}
       />
     </div>
   );

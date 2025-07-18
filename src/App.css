@@ -26,7 +26,7 @@
   background-color: #fff;
   border: 1px solid #0079c2;
   color: #0079c2;
-  border-radius: 3px;
+  border-radius: 7px;
   font-size: 14px;
   padding: 9px 33px;
   text-align: center;
@@ -35,6 +35,29 @@
   justify-content: center;
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
-  top: 380px;
+  top: 345px;
   left: 1650px;
+}
+
+.chart-button {
+  background-color: #fff;
+  border: 2px solid transparent;
+  color: #bcbcbc;
+  border-radius: 7px;
+  font-size: 15px;
+  padding: 5px 7px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  top: 30px;
+  left: 660px;
+}
+.chart-button.active {
+  outline: none;
+  background-color: #775da6;
+  color: #fff;
+  border: 2px solid #775da6;
 }

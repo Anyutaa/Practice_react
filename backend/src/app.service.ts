@@ -45,20 +45,24 @@ export class AppService {
     console.log('Данные считаны:', data.length);
     return data;
   }
-
+  private tempIdMap: Record<string, number> = {};
   // Добавление новых строк
   async addData(newItems: any[]) {
     const data = await this.loadFromFile();
-    const idMap = {};
+    const idMap: Record<string, number> = {};
 
     const newItemsWithId = newItems.map((item) => {
       this.maxId += 1;
-      idMap[item.tempId] = this.maxId;
-
+      if (item.tempId) {
+        idMap[item.tempId] = this.maxId;
+        this.tempIdMap[item.tempId] = this.maxId;
+      }
       return {
-        id: this.maxId, // ставим в начало
+        id: this.maxId,
         ...Object.fromEntries(
-          Object.entries(item).filter(([key]) => key !== 'id'),
+          Object.entries(item).filter(
+            ([key]) => key !== 'id' && key !== 'tempId',
+          ),
         ),
       };
     });
@@ -68,11 +72,13 @@ export class AppService {
   }
 
   // Редактирование строк
-  async updateData(editedItems: { id: number; changes: any }[]) {
+  async updateData(editedItems: { id: number | string; changes: any }[]) {
     const data = await this.loadFromFile();
 
     for (const { id, changes } of editedItems) {
-      const item = data.find((el) => el.id === id || el.tempId === id);
+      const realId =
+        typeof id === 'string' && this.tempIdMap[id] ? this.tempIdMap[id] : id;
+      const item = data.find((el) => el.id === realId);
       if (item) {
         for (const key in changes) {
           if (key === 'meanings' && typeof changes.meanings === 'object') {
@@ -83,22 +89,24 @@ export class AppService {
         }
       }
     }
+
     await this.saveToFile(data);
     return { message: 'Обновлены строки', updated: editedItems };
   }
 
   // Удаление строк
-  async deleteData(idsToDelete: number[]) {
-    let data = await this.loadFromFile();
+  async deleteData(idsToDelete: (number | string)[]) {
+    const data = await this.loadFromFile();
 
-    const beforeLength = data.length;
-    data = data.filter(
-      (item) =>
-        !(idsToDelete.includes(item.id) || idsToDelete.includes(item.tempId)),
+    const ids = idsToDelete.map((id) =>
+      typeof id === 'string' && this.tempIdMap[id] ? this.tempIdMap[id] : id,
     );
-    const deletedCount = beforeLength - data.length;
 
-    await this.saveToFile(data);
-    return { message: `Удалено строк: ${deletedCount}`, deleted: idsToDelete };
+    const filtered = data.filter((item) => !ids.includes(item.id));
+    const deletedCount = data.length - filtered.length;
+
+    await this.saveToFile(filtered);
+    this.tempIdMap = {};
+    return { message: `Удалено строк: ${deletedCount}`, deleted: ids };
   }
 }

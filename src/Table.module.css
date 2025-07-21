@@ -2,9 +2,9 @@
 
 .tableWrap {
   max-height: 425px;
-  overflow-x: scroll;
+  overflow-x: auto;
   margin: 100px 0 0 29px;
-  max-width: 94%;
+  max-width: 96%;
   overflow-y: auto;
 }
 
@@ -30,7 +30,8 @@
   border: 1px solid #959ca9;
   font-family: Roboto, sans-serif;
   table-layout: auto;
-  min-width: 1750px;
+  min-width: 1760px;
+  max-width: 2050px;
 }
 
 .table th,
@@ -55,9 +56,11 @@
 .table th:nth-child(1),
 .table td:nth-child(1) {
   width: 176px;
+  height: 50px;
 }
 
 .table th:nth-child(2),
 .table td:nth-child(2) {
   width: 90px;
+  height: 50px;
 }

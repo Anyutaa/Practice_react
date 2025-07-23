@@ -168,6 +168,7 @@ function Table({
                                 value={value}
                                 onChange={(e) => handleChange(e, i, cell.column.id)}
                                 onBlur={() => handleBlur(i, rowId)}
+                                maxLength={20}
                                 autoFocus
                               >
                                 <option value="">Выберите</option>
@@ -183,6 +184,7 @@ function Table({
                                 value={value}
                                 onChange={(e) => handleChange(e, i, cell.column.id)}
                                 onBlur={() => handleBlur(i, rowId)}
+                                maxLength={20}
                                 autoFocus
                               />
                             );

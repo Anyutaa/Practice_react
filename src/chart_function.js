@@ -3,14 +3,14 @@ Chart.register(...registerables);
 
 let chartInstance = null;
 
-export function drawChart(dataArray, rowIndex) {
-  const inputData = dataArray?.[rowIndex];
+export function drawChart(dataArray, rowId, yearLabels) {
+  const inputData = dataArray?.find((item) => item.id === rowId);
   if (!inputData) {
-    console.error(`No data found for row index ${rowIndex}`);
+    console.error(`No data found for row id ${rowId}`);
     return null;
   }
 
-  const labels = Array.from({ length: 12 }, (_, i) => 2026 + i);
+  const labels = yearLabels.map((y) => y.id);
 
   const data_set = {
     labels: labels,
@@ -22,11 +22,11 @@ export function drawChart(dataArray, rowIndex) {
         borderWidth: 2,
         tension: 0.3,
 
-        pointRadius: 3, // Размер точки
-        pointBorderWidth: 2, // Толщина обводки
-        pointStyle: 'circle', // Форма — круг
-        pointBackgroundColor: '#fff', // Центр — белый (дыра)
-        pointBorderColor: '#007df0', // Обводка — как линия
+        pointRadius: 3,
+        pointBorderWidth: 2,
+        pointStyle: 'circle',
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#007df0',
       },
     ],
   };
@@ -50,7 +50,6 @@ export function drawChart(dataArray, rowIndex) {
           },
           grid: {
             color: '#D0D0D0',
-            borderDash: [],
           },
           border: {
             dash: [5, 5],

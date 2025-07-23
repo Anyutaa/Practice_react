@@ -29,7 +29,7 @@ export async function saveData(
   setEditedRows([]);
   setDeletedIds([]);
 }
-//
+//saveAddedRows - собираем данные для создания новых строк
 export async function saveAddedRows(addedRows, setData) {
   try {
     const response = await axios.post(`${API_URL}/add`, addedRows); // массив новых строк
@@ -46,24 +46,27 @@ export async function saveAddedRows(addedRows, setData) {
     console.error('Ошибка при добавлении данных:', error);
   }
 }
-//
+//saveEditedRows - собираем данные для редактирование даннных
 export async function saveEditedRows(editedRows, columns) {
   try {
     const payload = editedRows.map((row) => {
       const changes = {};
-      const meanings = {};
+      const rawChanges = row.changes;
 
-      for (const key in row.changes) {
-        const column = columns.find((col) => col.id === key);
-        if (column?.isYear) {
-          meanings[key] = row.changes[key];
+      for (const key in rawChanges) {
+        if (key === 'meanings') {
+          const parsedMeanings = {};
+          for (const yearKey in rawChanges.meanings) {
+            const rawValue = rawChanges.meanings[yearKey];
+            const parsed = parseFloat(
+              typeof rawValue === 'string' ? rawValue.replace(',', '.') : rawValue
+            );
+            parsedMeanings[yearKey] = isNaN(parsed) ? rawValue : parsed;
+          }
+          changes.meanings = parsedMeanings;
         } else {
-          changes[key] = row.changes[key];
+          changes[key] = rawChanges[key];
         }
-      }
-
-      if (Object.keys(meanings).length > 0) {
-        changes.meanings = meanings;
       }
 
       return {
@@ -79,7 +82,7 @@ export async function saveEditedRows(editedRows, columns) {
     console.error('Ошибка при обновлении данных:', error);
   }
 }
-
+// deleteRows - данные для удаления строк
 export async function deleteRows(deletedIds) {
   try {
     const response = await axios.delete(`${API_URL}/delete`, {

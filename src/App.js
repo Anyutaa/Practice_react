@@ -18,7 +18,8 @@ function Table({
   setSelectedRowIndex,
   editedRows,
   setEditedRows,
-  selectedIndex,
+  selectedId,
+  yearColumns,
 }) {
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable({
     columns,
@@ -31,22 +32,20 @@ function Table({
 
   const handleChange = (e, rowIndex, columnId) => {
     const newData = [...data];
-    const inputValue = e.target.value;
-    // Преобразуем inputValue в число, если оно не пустое и является числовым значением; иначе оставляем как есть
-    const parsedValue = inputValue !== '' && !isNaN(inputValue) ? Number(inputValue) : inputValue;
+    let inputValue = e.target.value;
+    inputValue = inputValue.replace(',', '.');
 
     const updatedRow = { ...newData[rowIndex] };
     // Проверяем является ли колонка годом
     const column = columns.find((col) => col.id === columnId);
     const isYearColumn = column?.isYear === true;
-
     if (isYearColumn) {
       updatedRow.meanings = {
         ...updatedRow.meanings,
-        [columnId]: parsedValue,
+        [columnId]: inputValue,
       };
     } else {
-      updatedRow[columnId] = parsedValue;
+      updatedRow[columnId] = inputValue;
     }
 
     newData[rowIndex] = updatedRow;
@@ -54,9 +53,9 @@ function Table({
 
     let changes;
     if (isYearColumn) {
-      changes = { meanings: { [columnId]: parsedValue } };
+      changes = { meanings: { [columnId]: inputValue } };
     } else {
-      changes = { [columnId]: parsedValue };
+      changes = { [columnId]: inputValue };
     }
 
     const changeEntry = {
@@ -79,7 +78,7 @@ function Table({
                 ...prevChanges,
                 meanings: {
                   ...(prevChanges.meanings || {}),
-                  [columnId]: parsedValue,
+                  [columnId]: inputValue,
                 },
               },
             };
@@ -88,7 +87,7 @@ function Table({
               ...r,
               changes: {
                 ...prevChanges,
-                [columnId]: parsedValue,
+                [columnId]: inputValue,
               },
             };
           }
@@ -99,11 +98,11 @@ function Table({
     }
   };
 
-  const handleBlur = (rowIndex) => {
+  const handleBlur = (rowIndex, rowId) => {
     setEditingCell({ rowIndex: null, columnId: null });
 
-    if (rowIndex === selectedIndex) {
-      drawChart(data, selectedIndex);
+    if (rowId === selectedId) {
+      drawChart(data, rowId, yearColumns);
     }
   };
 
@@ -162,13 +161,13 @@ function Table({
                             } else {
                               value = data[i]?.[cell.column.id] ?? '';
                             }
-
+                            const rowId = data[i]?.id;
                             return cell.column.selectOptions ? (
                               <select
                                 className={style_input.editableInput}
                                 value={value}
                                 onChange={(e) => handleChange(e, i, cell.column.id)}
-                                onBlur={() => handleBlur(i)}
+                                onBlur={() => handleBlur(i, rowId)}
                                 autoFocus
                               >
                                 <option value="">Выберите</option>
@@ -183,7 +182,7 @@ function Table({
                                 className={style_input.editableInput}
                                 value={value}
                                 onChange={(e) => handleChange(e, i, cell.column.id)}
-                                onBlur={() => handleBlur(i)}
+                                onBlur={() => handleBlur(i, rowId)}
                                 autoFocus
                               />
                             );
@@ -205,44 +204,57 @@ const baseColumns = [
   {
     Header: 'Показатель',
     accessor: 'name',
+    id: 'name',
   },
   {
     Header: 'ед.изм.',
     accessor: 'unit_name',
     selectOptions: ['млн м3', 'тыс.т', 'млн м3/год', 'процент'],
+    id: 'unit_name',
   },
 ];
 
-const yearColumns = Array.from({ length: 12 }, (_, i) => {
-  const year = String(2026 + i);
-  return {
-    Header: year,
-    accessor: (row) => row.meanings?.[year] ?? '',
-    id: year,
-    isYear: true,
-  };
-});
-
 function App() {
   const [data, setData] = useState([]);
-  const columns = React.useMemo(() => [...baseColumns, ...yearColumns], []);
+  const [columns, setColumns] = useState([]);
+  const [yearColumns, setYearColumns] = useState([]);
 
   useEffect(() => {
     async function loadData() {
       const fetchedData = await api.fetchData();
       console.log('Полученные данные с API:', fetchedData);
-      if (Array.isArray(fetchedData)) {
-        const formattedData = fetchedData.map((item) => ({
-          id: item.id,
-          name: item.name,
-          unit_name: item.unit_name,
-          meanings: item.meanings || {},
-        }));
-        setData(formattedData);
-      } else {
+
+      if (!Array.isArray(fetchedData)) {
         console.error('Полученные данные не являются массивом', fetchedData);
+        return;
       }
+
+      const formattedData = fetchedData.map((item) => ({
+        id: item.id,
+        name: item.name,
+        unit_name: item.unit_name,
+        meanings: item.meanings || {},
+      }));
+
+      // Получаем все уникальные года из meanings
+      const allYears = new Set();
+      formattedData.forEach((item) => {
+        Object.keys(item.meanings).forEach((year) => allYears.add(year));
+      });
+
+      const yearColumns = Array.from(allYears)
+        .sort()
+        .map((year) => ({
+          Header: year,
+          accessor: (row) => row.meanings?.[year] ?? '',
+          id: year,
+          isYear: true,
+        }));
+      setYearColumns(yearColumns);
+      setColumns([...baseColumns, ...yearColumns]);
+      setData(formattedData);
     }
+
     loadData();
   }, []);
   const [selectedRowIndex, setSelectedRowIndex] = useState(null);
@@ -250,10 +262,10 @@ function App() {
   const [editedRows, setEditedRows] = useState([]);
   const [deletedIds, setDeletedIds] = useState([]);
 
-  const [selectedIndex, setSelectedIndex] = useState(null);
-  const handleClick = (index) => {
-    setSelectedIndex(index);
-    drawChart(data, index);
+  const [selectedId, setSelectedId] = useState(null);
+  const handleClick = (id) => {
+    setSelectedId(id);
+    drawChart(data, id, yearColumns);
   };
 
   return (
@@ -294,7 +306,8 @@ function App() {
           setSelectedRowIndex={setSelectedRowIndex}
           editedRows={editedRows}
           setEditedRows={setEditedRows}
-          selectedIndex={selectedIndex}
+          selectedId={selectedId}
+          yearColumns={yearColumns}
         />
       </div>
       <Button
@@ -315,18 +328,18 @@ function App() {
       />
       <Button
         label="Газ (вал.)"
-        className={`chart-button ${selectedIndex === 0 ? 'active' : ''}`}
-        onClick={() => handleClick(0)}
+        className={`chart-button ${selectedId === 1 ? 'active' : ''}`}
+        onClick={() => handleClick(1)}
       />
       <Button
         label="Конденсат (нестаб.)"
-        className={`chart-button ${selectedIndex === 2 ? 'active' : ''}`}
-        onClick={() => handleClick(2)}
+        className={`chart-button ${selectedId === 3 ? 'active' : ''}`}
+        onClick={() => handleClick(3)}
       />
       <Button
         label="Пик"
-        className={`chart-button ${selectedIndex === 5 ? 'active' : ''}`}
-        onClick={() => handleClick(5)}
+        className={`chart-button ${selectedId === 6 ? 'active' : ''}`}
+        onClick={() => handleClick(6)}
       />
       <canvas
         id="myChart"
